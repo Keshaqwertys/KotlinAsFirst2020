@@ -3,6 +3,7 @@
 package lesson11.task1
 
 import ru.spbstu.kotlin.typeclass.classes.defaultValue
+import kotlin.time.seconds
 
 /**
  * Класс "Величина с размерностью".
@@ -19,8 +20,8 @@ import ru.spbstu.kotlin.typeclass.classes.defaultValue
  * - во всех остальных случаях следует бросить IllegalArgumentException
  */
 fun Reg(s: String): Pair<Double, String> {
-    if (!Regex("""\d+ [a-zA-Z]+""").matches(s)) throw IllegalArgumentException()
-    return (Pair(Regex("""\d+""").find(s)!!.value.toDouble(), Regex("""[a-zA-Z]+""").find(s)!!.value))
+    if (!Regex("""-?\d+ [a-zA-Z]+""").matches(s)) throw IllegalArgumentException()
+    return (Pair(Regex("""-?\d+""").find(s)!!.value.toDouble(), Regex("""[a-zA-Z]+""").find(s)!!.value))
 }
 
 class DimensionalValue(value: Double, dimension: String) : Comparable<DimensionalValue> {
@@ -28,23 +29,29 @@ class DimensionalValue(value: Double, dimension: String) : Comparable<Dimensiona
      * Величина с БАЗОВОЙ размерностью (например для 1.0Kg следует вернуть результат в граммах -- 1000.0)
      */
 
+    private fun MapDimensionPrefix(): MutableMap<String, Double> {
+        val set = DimensionPrefix.values().toSet()
+        val map = mutableMapOf<String, Double>()
+        for (Prefix in set)
+            map[Prefix.abbreviation] = Prefix.multiplier
+        return map
+    }
+
     private fun check(value: Double, dimension: String): Pair<Double, Dimension> {
         val SetDimension = Dimension.values().toSet()
         val MapDimension = mutableMapOf<String, Dimension>()
         for (Dimension in SetDimension)
             MapDimension[Dimension.abbreviation] = Dimension
 
-        val SetDimensionPrefix = DimensionPrefix.values().toSet()
-        val MapDimensionPrefix = mutableMapOf<String, Double>()
-        for (Prefix in SetDimensionPrefix)
-            MapDimensionPrefix[Prefix.abbreviation] = Prefix.multiplier
+        val mapDP = MapDimensionPrefix()
 
         return if (dimension in MapDimension)
             Pair(value, MapDimension[dimension]!!)
-        else if (dimension[0].toString() in MapDimensionPrefix && dimension.substring(1) in MapDimension)
-            Pair(value * MapDimensionPrefix[dimension[0].toString()]!!, MapDimension[dimension.substring(1)]!!)
+        else if (dimension[0].toString() in mapDP && dimension.substring(1) in MapDimension)
+            Pair(value * mapDP[dimension[0].toString()]!!, MapDimension[dimension.substring(1)]!!)
         else throw IllegalArgumentException()
     }
+
 
     val value = check(value, dimension).first
 
@@ -72,7 +79,7 @@ class DimensionalValue(value: Double, dimension: String) : Comparable<Dimensiona
     /**
      * Смена знака величины
      */
-    operator fun unaryMinus(): DimensionalValue = TODO()
+    operator fun unaryMinus(): DimensionalValue = DimensionalValue(value * -1, dimension.abbreviation)
 
     /**
      * Вычитание другой величины. Если базовая размерность разная, бросить IllegalArgumentException
@@ -86,27 +93,43 @@ class DimensionalValue(value: Double, dimension: String) : Comparable<Dimensiona
     /**
      * Умножение на число
      */
-    operator fun times(other: Double): DimensionalValue = TODO()
+
+    operator fun times(other: Double): DimensionalValue = DimensionalValue(value * other, dimension.abbreviation)
 
     /**
      * Деление на число
      */
-    operator fun div(other: Double): DimensionalValue = TODO()
+    operator fun div(other: Double): DimensionalValue = DimensionalValue(value / other, dimension.abbreviation)
 
     /**
      * Деление на другую величину. Если базовая размерность разная, бросить IllegalArgumentException
      */
-    operator fun div(other: DimensionalValue): Double = TODO()
+    operator fun div(other: DimensionalValue): Double =
+        if (dimension == other.dimension)
+            value / other.value
+        else throw  IllegalArgumentException()
 
     /**
      * Сравнение на равенство
      */
-    override fun equals(other: Any?): Boolean = TODO()
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is DimensionalValue) return false
+        if (other.value == value && other.dimension == other.dimension)
+            return true
+        return false
+    }
 
     /**
      * Сравнение на больше/меньше. Если базовая размерность разная, бросить IllegalArgumentException
      */
-    override fun compareTo(other: DimensionalValue): Int = TODO()
+    override fun compareTo(other: DimensionalValue): Int =
+        when {
+            dimension != other.dimension -> throw  IllegalArgumentException()
+            value > other.value -> 1
+            value < other.value -> -1
+            else -> 0
+        }
 }
 
 /**
