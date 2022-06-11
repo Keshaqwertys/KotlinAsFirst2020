@@ -1,4 +1,4 @@
-...К сожалению из-за ошибки консольный диалог из git bash до определенного места не сохранился...
+
 ### Сделал fork проекта (https://github.com/Kotlin-Polytech/KotlinAsFirst2020) на свой github (https://github.com/Keshaqwertys)
 
 ### Скопировал себе на компьютер:
@@ -23,13 +23,17 @@ $ git rebase --onto master 1137b420cc95fa6894edad69b31e2da1bb985d1d upstream-my/
 ### Сделал ветку backport и загрузил в неё коммиты:
 
 $ git branch backport
+
 $ git checkout master
+
 $ git merge backport
 
 ### Добавил upstream-theirs товарища и сделал merge с веткой master:
 
 $ git remote add upstream-theirs https://github.com/Flimill/KotlinAsFirst2021
+
 $ git fetch upstream-theirs
+
 $ git merge -s ours upstream-theirs/master
 
 
